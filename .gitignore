@@ -1,6 +1,6 @@
-data\
+Data/
 .ipynb_checkpoints
-out\
+out/
 adata_034_c1d1.csv
 ._.DS_Store
 .DS_Store

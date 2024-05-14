@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Remote Debug",
+            "type": "python",
+            "request": "launch",
+            "program": "run_viziumhd.py",
+            "console": "integratedTerminal",
+            "cwd": "/data/kanferg/Sptial_Omics/playGround", 
+            "pythonPath": "/data/kanferg/conda/envs/squidpy/bin/python3", 
+        }
+    ]
+}
