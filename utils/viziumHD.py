@@ -45,6 +45,9 @@ class viziumHD:
         self.qcReport()
         
     def parquet_to_csv(self):
+        '''
+        Converts a Parquet file to a CSV file if the CSV file does not already exist.
+        '''
         file_path = os.path.join(self.path,'spatial/tissue_positions_list.csv')
         # Read the Parquet file
         if os.path.exists(file_path):
@@ -66,6 +69,15 @@ class viziumHD:
         sc.pp.log1p(self.andata)
         print("scale")
         sc.pp.scale(self.andata,**kwargs)  
+    
+    def embed_and_cluster_transcriptional_similarity(self,**kwargs):
+        sc.pp.pca(self.andata,**kwargs)
+        sc.pp.neighbors(self.andata,**kwargs)
+        sc.tl.umap(self.andata,**kwargs)
+        sc.tl.leiden(
+            self.andata, **kwargs, key_added="clusters", flavor="igraph", directed=False, n_iterations=2
+        )
+        
     
     def qcReport(self):
         sc.pp.calculate_qc_metrics(self.andata, inplace=True)
