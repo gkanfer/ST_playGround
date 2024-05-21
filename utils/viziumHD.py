@@ -30,7 +30,7 @@ class viziumHD:
         Number of bins to use for the histogram of the number of genes by counts with a threshold. Default is 60.
     '''
     def __init__(self,path,outPath,totalThr = 10000, bins_total = 40, bins_gene_plot = 60, geneThr = 4000,
-                 bins_gene_plot_thr = 60, qcFilePrefix = ""):
+                 bins_gene_plot_thr = 60, qcFilePrefix = "", qc = True):
         self.path = path
         self.outPath = outPath
         self.totalThr = totalThr
@@ -39,45 +39,47 @@ class viziumHD:
         self.geneThr = geneThr
         self.bins_gene_plot_thr = bins_gene_plot_thr
         self.qcFilePrefix = qcFilePrefix
-        self.filterNorm = filterNorm
         self.parquet_to_csv()
         self.andata = self.readVizHD()
-        self.qcReport()
+        self.qc = qc
+        if self.qc:
+            self.qcReport()
         
     def parquet_to_csv(self):
         '''
         Converts a Parquet file to a CSV file if the CSV file does not already exist.
         '''
         file_path = os.path.join(self.path,'spatial/tissue_positions_list.csv')
-        # Read the Parquet file
-        if os.path.exists(file_path):
-            return
-        else:
+        if not os.path.exists(file_path):
             df = pd.read_parquet(os.path.join(self.path,'spatial/tissue_positions.parquet'))
             # Write to a CSV file
             df.to_csv(os.path.join(self.path,'spatial/tissue_positions_list.csv'), index=False)
-    
+        return
+        
     def readVizHD(self):
         return sc.read_visium(path = self.path)
     
-    def filterANDnorm(self,**kwargs):
-        sc.pp.filter_cells(self.andata,**kwargs)
-        sc.pp.filter_genes(self.andata,**kwargs)
+    def filterANDnorm(self, **kwargs):
+        filter_args = ['min_counts', 'min_genes', 'max_counts', 'max_genes']
+        for arg in filter_args:
+            if arg in kwargs:
+                sc.pp.filter_cells(self.andata, **{arg: kwargs[arg]})
+        #sc.pp.filter_genes(self.andata,**kwargs)
         print("normalize total")
         sc.pp.normalize_total(self.andata)
         print("log transform")
         sc.pp.log1p(self.andata)
         print("scale")
-        sc.pp.scale(self.andata,**kwargs)  
+        sc.pp.scale(self.andata)
+        return self   
     
-    def embed_and_cluster_transcriptional_similarity(self,**kwargs):
-        sc.pp.pca(self.andata,**kwargs)
-        sc.pp.neighbors(self.andata,**kwargs)
-        sc.tl.umap(self.andata,**kwargs)
-        sc.tl.leiden(
-            self.andata, **kwargs, key_added="clusters", flavor="igraph", directed=False, n_iterations=2
-        )
-        
+    def embed_and_cluster_transcriptional_similarity(self):
+        sc.pp.pca(self.andata,n_comps = 10)
+        sc.pp.neighbors(self.andata)
+        sc.tl.umap(self.andata)
+        sc.tl.leiden(self.andata, key_added="clusters", flavor="igraph", directed=False, n_iterations=2)
+        with PdfPages(os.path.join(self.outPath, f'embed_and_cluster_transcriptional_similarity_{self.qcFilePrefix}.pdf')) as pdf:
+            sq.pl.spatial_scatter(self.andata, color="clusters")
     
     def qcReport(self):
         sc.pp.calculate_qc_metrics(self.andata, inplace=True)
