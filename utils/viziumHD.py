@@ -1,3 +1,4 @@
+import debugpy
 import scanpy as sc
 import squidpy as sq
 import pandas as pd
@@ -79,7 +80,19 @@ class viziumHD:
         sc.tl.umap(self.andata)
         sc.tl.leiden(self.andata, key_added="clusters", flavor="igraph", directed=False, n_iterations=2)
         with PdfPages(os.path.join(self.outPath, f'embed_and_cluster_transcriptional_similarity_{self.qcFilePrefix}.pdf')) as pdf:
-            sq.pl.spatial_scatter(self.andata, color="clusters")
+            while True:
+                try:
+                    debugpy.listen(("localhost", 5678))
+                    print("Waiting for debugger attach...")
+                    debugpy.wait_for_client()
+                    print("Debugger attached.")
+
+                    sq.pl.spatial_scatter(self.andata, color=["clusters"])
+                    break  # Exit loop if no error
+                except Exception as e:
+                    print(f"Error: {e}")
+                    print("Restarting debugging...")
+                    continue  # Restart the loop to reattach the debugger
     
     def qcReport(self):
         sc.pp.calculate_qc_metrics(self.andata, inplace=True)

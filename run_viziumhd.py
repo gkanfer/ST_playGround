@@ -11,9 +11,6 @@ if __name__ == "__main__":
     pathout = "/data/kanferg/Sptial_Omics/playGround/out"
     run(path,pathout,plotPDF = 'embd')
     
-    
-    
-
 '''
 self.totalThr = totalThr
 self.bins_total = bins_total

@@ -2,14 +2,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Remote Debug",
+            "name": "Python: Attach",
             "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/run_viziumhd.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}", 
-            "pythonPath": "/data/kanferg/conda/envs/squidpy/bin/python3",
-            "justMyCode": false  
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ],
+            "justMyCode": false
         }
     ]
 }
